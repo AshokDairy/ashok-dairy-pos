@@ -1,0 +1,25 @@
+{
+  "name": "Ashok Dairy — Counter",
+  "short_name": "Ashok Dairy",
+  "description": "Point of sale for Ashok Dairy: sell, settle and print receipts.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FBF6ED",
+  "theme_color": "#7A2A2A",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
