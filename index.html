@@ -106,13 +106,13 @@ h2{font:600 18px/1.25 Fraunces,serif;margin:0 0 4px}
 .field{margin-bottom:12px}
 .field label{display:block;font:600 12px/1 Inter,sans-serif;color:rgba(43,33,27,.55);margin-bottom:5px}
 .field input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;font:400 14px/1 Inter,sans-serif;background:var(--paper)}
-.receipt{background:#fff;border-radius:6px;padding:20px 18px;font-family:'Space Mono',monospace;font-size:11.5px;line-height:1.65;max-height:64vh;overflow-y:auto}
+.receipt{width:100%;max-width:360px;background:#fff;border-radius:6px;padding:20px 18px;font-family:'Space Mono',monospace;font-size:11.5px;line-height:1.65;max-height:64vh;overflow-y:auto}
 .receipt .c{text-align:center}.receipt .t{text-align:center;font:700 15px/1.3 Fraunces,serif}
 .receipt hr{border:none;border-top:1px dashed #C9BCA6;margin:9px 0}
 .receipt .l{display:flex;justify-content:space-between;gap:10px}
-.center{position:fixed;inset:0;z-index:70;background:rgba(43,33,27,.5);display:flex;flex-direction:column;justify-content:center;padding:22px}
+.center{position:fixed;inset:0;z-index:70;background:rgba(43,33,27,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px}
 .center[hidden]{display:none}
-.acts{display:flex;gap:9px;margin-top:14px}
+.acts{display:flex;gap:9px;margin-top:14px;width:100%;max-width:360px}
 .acts button{flex:1;border-radius:13px;padding:15px;font:700 13.5px/1 Inter,sans-serif;cursor:pointer;border:none}
 .acts .ghost{background:rgba(251,246,237,.12);color:var(--cream);border:1px solid rgba(251,246,237,.4)}
 .acts .gold{background:var(--gold);color:var(--maroon-d)}
@@ -204,6 +204,15 @@ var tab = 'sell', cat = 'All', cart = {}, cashStr = '', qtyId = null, lastSale =
 function saveAll(){ LS.set('products', products); LS.set('sales', sales); LS.set('credit', credit); LS.set('counter', counter); }
 function fmt(n){ return 'Rs. ' + Number(n||0).toLocaleString('en-IN', {maximumFractionDigits:2}); }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function photoOf(p){
+  if(photos[p.id]) return photos[p.id];
+  if(p.choose){ for(var c=0;c<p.choose.length;c++) if(photos[p.choose[c]]) return photos[p.choose[c]]; }
+  for(var i=0;i<products.length;i++){
+    var q = products[i];
+    if(q.category === p.category && photos[q.id]) return photos[q.id];
+  }
+  return null;
+}
 function prod(id){ for(var i=0;i<products.length;i++) if(products[i].id===id) return products[i]; return null; }
 function kind(u){ u=(u||'').toLowerCase(); return u==='kg' ? 'kg' : (u==='litre' ? 'litre' : null); }
 function qtyText(unit, q){
@@ -255,7 +264,7 @@ function renderView(){
     v.innerHTML = '<div class="grid">' + list.map(function(p){
       var group = p.choose || [p.id];
       var q = group.reduce(function(a,id){ return a + (cart[id]||0); }, 0);
-      var photo = photos[p.id];
+      var photo = photoOf(p);
       var price = p.choose ? 'Rs ' + Math.min.apply(null, group.map(function(id){ return prod(id).price; })) + '+' : 'Rs ' + p.price;
       return '<div class="card" data-add="'+p.id+'">'
         + (q > 0 ? '<div class="badge">'+esc(qtyText(p.unit, q))+'</div>' : '')
