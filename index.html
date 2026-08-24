@@ -52,9 +52,10 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(251,246,23
 nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;border:none;background:transparent;cursor:pointer;font:600 10.5px/1 Inter,sans-serif;color:rgba(43,33,27,.45)}
 nav button i{width:22px;height:22px;border-radius:7px;background:#DCCFB8;display:block}
 nav button.on{color:var(--maroon)}nav button.on i{background:var(--maroon)}
-.sheet{position:fixed;inset:0;z-index:60;background:rgba(43,33,27,.45);display:flex;flex-direction:column;justify-content:flex-end}
+.sheet{position:fixed;inset:0;z-index:60;background:rgba(43,33,27,.45);display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
 .sheet[hidden]{display:none}
-.panel{background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 24px);max-height:88vh;display:flex;flex-direction:column;animation:up .22s cubic-bezier(.32,.72,0,1)}
+.panel{width:100%;max-width:520px;background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 24px);max-height:88vh;display:flex;flex-direction:column;animation:up .22s cubic-bezier(.32,.72,0,1)}
+@media(min-width:900px){.panel{border-radius:22px;margin-bottom:24px}}
 @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px;flex:none}
 h2{font:600 18px/1.25 Fraunces,serif;margin:0 0 4px}
@@ -192,7 +193,24 @@ var DEFAULT_PRODUCTS = [
 ];
 
 var settings = LS.get('settings', {name:'Ashok Dairy Pvt. Ltd.', address:'Bhagwati Marg, Naxal, Kathmandu, Nepal', phone:'01-4513225', pan:'302380442', cashier:'Bhisma', qr:''});
-var products = LS.get('products', null) || DEFAULT_PRODUCTS.slice();
+var CATALOG_VERSION = 3;
+function mergeCatalog(){
+  var stored = LS.get('products', null);
+  var sameVersion = LS.get('catalogVersion', 0) === CATALOG_VERSION;
+  var byId = {};
+  if(stored) stored.forEach(function(p){ byId[p.id] = p; });
+  var merged = DEFAULT_PRODUCTS.map(function(d){
+    var s = byId[d.id];
+    var out = Object.assign({}, d);
+    // keep the shopkeeper's own price edits, but only within the same catalogue version
+    if(s && sameVersion && typeof s.price === 'number') out.price = s.price;
+    return out;
+  });
+  LS.set('catalogVersion', CATALOG_VERSION);
+  LS.set('products', merged);
+  return merged;
+}
+var products = mergeCatalog();
 var photos   = LS.get('photos', {});
 var sales    = LS.get('sales', []);
 var credit   = LS.get('credit', [{name:'Sita Maharjan', due:0},{name:'Ram Bahadur', due:0}]);
@@ -309,6 +327,7 @@ function renderView(){
       + '<div class="qrbox">' + (settings.qr ? '<img src="'+settings.qr+'" alt="">' : '<span style="font:700 10px/1.6 \'Space Mono\',monospace;color:rgba(43,33,27,.45);text-align:center">no QR saved</span>') + '</div>'
       + '<button class="big" id="qrPick" style="background:var(--maroon);margin-top:10px">Choose QR image</button></div>'
       + '<button class="big" id="saveSetup">Save shop details</button>'
+      + '<button class="big" id="resetCatalog" style="background:transparent;color:var(--danger);border:1.5px solid var(--line);margin-top:10px">Reset products &amp; prices to defaults</button>'
       + '<button class="big" id="exportCsv" style="background:transparent;color:var(--maroon-d);border:1.5px solid var(--line);margin-top:10px">Export sales as CSV</button>'
       + '<p style="font:400 11.5px/1.6 Inter,sans-serif;color:rgba(43,33,27,.5)">Everything is saved on this device only. Export regularly to keep a backup.</p></div>';
   }
@@ -470,7 +489,7 @@ function receiptHtml(s){
     + (settings.cashier ? '<div style="text-align:right;margin-top:3px">Cashier: '+esc(settings.cashier)+'</div>' : '') + '<hr>'
     + '<div class="l"><span>Customer name</span><span style="flex:1;border-bottom:1px dotted #999;margin-left:6px">&nbsp;</span></div>'
     + line('Receipt no.', s.id) + line('Date', d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) + '<hr>'
-    + s.items.map(function(it){ return line(it.name+' x '+qtyText(it.unit, it.qty), fmt(it.price*it.qty)); }).join('') + '<hr>'
+    + s.items.map(function(it){ return line(it.name+' × '+qtyText(it.unit, it.qty)+(kind(it.unit)?'':' pcs'), fmt(it.price*it.qty)); }).join('') + '<hr>'
     + line('Total', fmt(s.total), true)
     + (s.method==='cash' && s.received != null
         ? line('Cash', fmt(s.received)) + line('Change', fmt(s.change))
@@ -539,7 +558,7 @@ function exportCsv(){
 
 /* ---------- events ---------- */
 document.addEventListener('click', function(ev){
-  var t = ev.target.closest('[data-tab],[data-cat],[data-add],[data-q],[data-del],[data-pay],[data-qty],[data-amt],[data-pick],[data-key],[data-cashq],[data-credit],[data-price],[data-photo],[data-bill],[data-view],[data-print],#barbtn,#cashDone,#qrDone,#qtyAdd,#amtAdd,#addCredit,#rClose,#rPrint,#saveSetup,#qrPick,#exportCsv');
+  var t = ev.target.closest('[data-tab],[data-cat],[data-add],[data-q],[data-del],[data-pay],[data-qty],[data-amt],[data-pick],[data-key],[data-cashq],[data-credit],[data-price],[data-photo],[data-bill],[data-view],[data-print],#barbtn,#cashDone,#qrDone,#qtyAdd,#amtAdd,#addCredit,#rClose,#rPrint,#saveSetup,#qrPick,#exportCsv,#resetCatalog');
   if(!t) return;
   var d = t.dataset;
 
@@ -620,6 +639,14 @@ document.addEventListener('click', function(ev){
       settings.cashier = el('sCashier').value.trim();
       LS.set('settings', settings);
       render();
+      break;
+    }
+    case 'resetCatalog': {
+      products = DEFAULT_PRODUCTS.slice().map(function(d){ return Object.assign({}, d); });
+      LS.set('products', products);
+      LS.set('catalogVersion', CATALOG_VERSION);
+      render();
+      toast('Products reset to defaults');
       break;
     }
     case 'exportCsv': exportCsv(); break;
