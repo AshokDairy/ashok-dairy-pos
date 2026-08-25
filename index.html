@@ -139,7 +139,11 @@ nav .railtotal{display:none}
 .person .due{font:700 12.5px/1 var(--mono);color:var(--red)}
 .last{background:#F3EBD9;border-radius:12px;padding:11px 14px;margin-bottom:12px;flex:none}
 .last .hd{font:700 10.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--maroon);margin-bottom:7px}
-.last .r{display:flex;justify-content:space-between;gap:10px;font:400 11.5px/1.6 var(--mono);color:rgba(43,33,27,.6)}
+.last .r{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font:400 11.5px/1.6 var(--mono);color:rgba(43,33,27,.6)}
+.last .r>span:first-child{flex:1;min-width:0;text-wrap:pretty}
+.last .r>span:last-child{flex:none;text-align:right;white-space:nowrap}
+.last .m{display:flex;justify-content:space-between;gap:6px;width:82px}
+.last .m i{font-style:normal}
 .last .r.tot{font:700 12.5px/1.7 var(--mono);color:var(--maroon-d)}
 .last hr{border:none;border-top:1px dashed rgba(43,33,27,.2);margin:6px 0 4px}
 .last .view{width:100%;margin-top:9px;border:1px solid var(--line);background:var(--card);color:var(--maroon-d);border-radius:10px;padding:11px 6px;font:600 12.5px/1 var(--sans);cursor:pointer}
@@ -162,7 +166,11 @@ nav .railtotal{display:none}
 .slip{background:#fff;border-radius:6px;padding:20px 18px;font-family:var(--mono);font-size:11.5px;line-height:1.65;color:var(--ink);width:100%;max-width:360px;max-height:68%;overflow-y:auto;box-shadow:0 22px 50px rgba(0,0,0,.3)}
 .slip .t{text-align:center;font:700 15px/1.3 var(--serif)}
 .slip .c{text-align:center;color:rgba(43,33,27,.6)}
-.slip .l{display:flex;justify-content:space-between;gap:10px}
+.slip .l{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.slip .l>span:first-child{flex:1;min-width:0;text-wrap:pretty}
+.slip .l>span:last-child{flex:none;text-align:right;white-space:nowrap}
+.slip .m{display:flex;justify-content:space-between;gap:6px;width:82px}
+.slip .m i{font-style:normal}
 .slip hr{border:none;border-top:1px dashed #C9BCA6;margin:9px 0}
 .slipbtns{display:flex;gap:9px;margin-top:14px;width:100%;max-width:360px}
 .slipbtns button{border:1px solid rgba(251,246,237,.4);background:rgba(251,246,237,.12);color:var(--cream);border-radius:13px;padding:15px 12px;font:600 13px/1 var(--sans);cursor:pointer}
@@ -374,14 +382,22 @@ function printReceipt(){
   var sale = S.receipt; if(!sale) return;
   var paper = S.paper||80;
   function line(l,r,b){ return '<div class="l"'+(b?' style="font-weight:700;font-size:13px"':'')+'><span>'+esc(l)+'</span><span>'+esc(r)+'</span></div>'; }
+  function amt(l,n,b){
+    return '<div class="l"'+(b?' style="font-weight:700;font-size:13px"':'')+'><span>'+esc(l)+'</span>'
+      + '<span class="m"><i>Rs</i><i>'+esc(Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2}))+'</i></span></div>';
+  }
   var items = sale.items.map(function(it,i){
-    return line((i+1)+'. '+it.name+' × '+qtyText(it.unit,it.qty)+(kind(it.unit)?'':' pcs'), fmt(it.price*it.qty));
+    return amt((i+1)+'. '+it.name+' × '+qtyText(it.unit,it.qty)+(kind(it.unit)?'':' pcs'), it.price*it.qty);
   }).join('');
   var html = '<!doctype html><html><head><meta charset="utf-8"><title>'+esc(sale.id)+'</title><style>'
     + '@page{size:'+paper+'mm auto;margin:'+(paper>=80?4:3)+'mm}'
     + 'body{margin:0;font-family:"Courier New",monospace;font-size:'+(paper>=80?11.5:10)+'px;line-height:1.55;color:#000;width:'+(paper>=80?72:48)+'mm}'
     + '.c{text-align:center}.t{text-align:center;font-size:15px;font-weight:700;letter-spacing:.5px}'
-    + '.l{display:flex;justify-content:space-between;gap:8px}'
+    + '.l{display:flex;align-items:baseline;justify-content:space-between;gap:2mm}'
+    + '.l>span:first-child{flex:1;min-width:0}'
+    + '.l>span:last-child{flex:none;text-align:right;white-space:nowrap}'
+    + '.m{display:flex;justify-content:space-between;gap:1mm;width:' + (paper>=80?22:17) + 'mm}.m i{font-style:normal}'
+    + '.l>span[style]{width:auto}'
     + 'hr{border:none;border-top:1px dashed #000;margin:6px 0}'
     + '</style></head><body>'
     + '<div class="t">Ashok Dairy Pvt. Ltd.</div>'
@@ -392,10 +408,10 @@ function printReceipt(){
     + line('Receipt no.', sale.id)
     + line('Date', new Date(sale.time).toLocaleDateString()+' '+new Date(sale.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))
     + '<hr>' + items + '<hr>'
-    + line('Total', fmt(sale.total), true)
+    + amt('Total', sale.total, true)
     + (sale.method==='cash' && sale.received != null
-        ? line('Cash', fmt(sale.received)) + line('Change', fmt(sale.change))
-        : line(sale.methodLabel, fmt(sale.total)))
+        ? amt('Cash', sale.received) + amt('Change', sale.change)
+        : amt(sale.methodLabel, sale.total))
     + '<hr><div class="c" style="font-size:10px">Dherai Dherai Dhanyabad!</div>'
     + '<div class="c" style="font-size:9px;margin-top:5px">All sales are final. We do not accept returns or exchanges.</div>'
     + '</body></html>';
@@ -501,16 +517,20 @@ function itemsHTML(){
     + '<div class="itemlist">'+rows+'</div></div>';
 }
 
+function money(n){
+  return '<span class="m"><i>Rs</i><i>'+esc(Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2}))+'</i></span>';
+}
+
 function lastHTML(){
   var l = S.last;
   if(!l) return '';
   var rows = l.items.map(function(it,i){
-    return '<div class="r"><span>'+esc((i+1)+'. '+it.name+' × '+qtyText(it.unit,it.qty)+(kind(it.unit)?'':' pcs'))+'</span><span>'+esc(fmt(it.price*it.qty))+'</span></div>';
+    return '<div class="r"><span>'+esc((i+1)+'. '+it.name+' × '+qtyText(it.unit,it.qty)+(kind(it.unit)?'':' pcs'))+'</span><span>'+money(it.price*it.qty)+'</span></div>';
   }).join('');
   return '<div class="last"><div class="hd">Last sale · '+esc(l.id)+' · '+esc(l.methodLabel)+'</div>'+rows+'<hr>'
-    + '<div class="r tot"><span>Total</span><span>'+esc(fmt(l.total))+'</span></div>'
+    + '<div class="r tot"><span>Total</span><span>'+money(l.total)+'</span></div>'
     + (l.method==='cash' && l.received!=null
-        ? '<div class="r tot"><span>Cash</span><span>'+esc(fmt(l.received))+'</span></div><div class="r tot" style="color:var(--green-d)"><span>Change</span><span>'+esc(fmt(l.change))+'</span></div>'
+        ? '<div class="r tot"><span>Cash</span><span>'+money(l.received)+'</span></div><div class="r tot" style="color:var(--green-d)"><span>Change</span><span>'+money(l.change)+'</span></div>'
         : '')
     + '<button class="view" data-a="viewlast">View bill</button></div>';
 }
@@ -612,7 +632,7 @@ function qtySheetHTML(){
 function receiptHTML(){
   var r = S.receipt; if(!r) return '';
   var lines = r.items.map(function(it,i){
-    return '<div class="l"><span>'+esc((i+1)+'. '+it.name+' × '+qtyText(it.unit,it.qty)+(kind(it.unit)?'':' pcs'))+'</span><span>'+esc(fmtShort(it.price*it.qty))+'</span></div>';
+    return '<div class="l"><span>'+esc((i+1)+'. '+it.name+' × '+qtyText(it.unit,it.qty)+(kind(it.unit)?'':' pcs'))+'</span><span>'+money(it.price*it.qty)+'</span></div>';
   }).join('');
   return '<div id="receiptwrap"><div class="slip">'
     + '<div class="t">Ashok Dairy Pvt. Ltd.</div>'
@@ -623,10 +643,10 @@ function receiptHTML(){
     + '<div class="l"><span>Receipt no.</span><span>'+esc(r.id)+'</span></div>'
     + '<div class="l"><span>Date</span><span>'+esc(new Date(r.time).toLocaleDateString()+' '+new Date(r.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))+'</span></div>'
     + '<hr>'+lines+'<hr>'
-    + '<div class="l" style="font-weight:700;font-size:13px"><span>Total</span><span>'+esc(fmt(r.total))+'</span></div>'
+    + '<div class="l" style="font-weight:700;font-size:13px"><span>Total</span><span>'+money(r.total)+'</span></div>'
     + (r.method==='cash' && r.received!=null
-        ? '<div class="l"><span>Cash</span><span>'+esc(fmt(r.received))+'</span></div><div class="l"><span>Change</span><span>'+esc(fmt(r.change))+'</span></div>'
-        : '<div class="l"><span>'+esc(r.methodLabel)+'</span><span>'+esc(fmt(r.total))+'</span></div>')
+        ? '<div class="l"><span>Cash</span><span>'+money(r.received)+'</span></div><div class="l"><span>Change</span><span>'+money(r.change)+'</span></div>'
+        : '<div class="l"><span>'+esc(r.methodLabel)+'</span><span>'+money(r.total)+'</span></div>')
     + '<hr><div class="c" style="font-size:10px">Dherai Dherai Dhanyabad!</div>'
     + '<div class="c" style="font-size:9px;margin-top:5px">All sales are final. We do not accept returns or exchanges.</div>'
     + '</div><div class="slipbtns">'
