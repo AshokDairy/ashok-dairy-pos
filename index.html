@@ -25,7 +25,7 @@ button,input{font-family:inherit}
 a{color:var(--maroon)}a:hover{color:var(--maroon-d)}
 
 /* ---------- shell: phone default, widens with breakpoints ---------- */
-#app{height:100dvh;min-height:100vh;display:grid;grid-template-areas:"head" "main" "nav";grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:1fr;position:relative;overflow:hidden}
+#app{height:100vh;height:100dvh;height:var(--appH,100dvh);min-height:0;display:grid;grid-template-areas:"head" "main" "nav";grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:1fr;position:relative;overflow:hidden}
 
 header.bar{grid-area:head;background:linear-gradient(175deg,var(--maroon) 0%,var(--maroon-d) 100%);color:var(--cream);padding:calc(env(safe-area-inset-top) + 14px) 18px 14px;display:flex;align-items:center;gap:12px}
 .logo{width:42px;height:42px;border-radius:50%;background:var(--gold);color:var(--maroon-d);display:flex;align-items:center;justify-content:center;font:700 16px/1 var(--serif);border:2px solid var(--cream);flex:none}
@@ -95,11 +95,12 @@ nav .railtotal{display:none}
 /* ticket: bottom sheet when narrow, column when wide */
 #ticketwrap:empty{display:none}
 #ticketwrap{position:absolute;inset:0;z-index:60;background:rgba(43,33,27,.42);display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn .15s ease}
-#ticket{background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 24px);max-height:86%;display:flex;flex-direction:column;animation:sheetUp .22s cubic-bezier(.32,.72,0,1)}
+#ticket{background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 16px);max-height:86%;display:flex;flex-direction:column;overflow:hidden;animation:sheetUp .22s cubic-bezier(.32,.72,0,1)}
 .handle{width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px;flex:none}
 #ticket h2{margin:0 0 2px;font:600 18px/1.25 var(--serif);flex:none}
 #ticket .sub{font:400 11.5px/1.4 var(--sans);color:rgba(43,33,27,.5);margin-bottom:12px;flex:none}
-.lines{flex:1;min-height:0;overflow-y:auto}
+.lines{flex:1 1 auto;min-height:44px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#ticket.paying .lines{flex:0 1 auto;max-height:28vh}
 .line{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px dashed var(--line)}
 .line .who{flex:1;min-width:0}
 .line .nm{font:600 13.5px/1.3 var(--sans)}
@@ -110,15 +111,15 @@ nav .railtotal{display:none}
 .qbox .u{font:700 10.5px/1 var(--mono);color:rgba(43,33,27,.45);padding-right:4px}
 .line .lt{width:62px;text-align:right;font:700 13px/1 var(--mono);color:var(--maroon-d)}
 .del{flex:none;width:30px;height:30px;border:none;border-radius:9px;background:#F7E6E4;color:var(--red);font:700 15px/1 var(--sans);cursor:pointer}
-.totrow{flex:none;display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;margin-top:10px}
+.totrow{flex:0 0 auto;display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;margin-top:10px;background:var(--cream)}
 .totrow span{font:600 14px/1 var(--sans)}
 .totrow b{font:700 18px/1.2 var(--mono);color:var(--maroon-d)}
-.pay3{flex:none;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:12px}
-.pay3 button{border:none;border-radius:13px;padding:15px 6px;font:700 13.5px/1 var(--sans);cursor:pointer}
+.pay3{flex:0 0 auto;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px;padding-bottom:2px;position:sticky;bottom:0;background:var(--cream);z-index:2}
+.pay3 button{border:none;border-radius:13px;padding:15px 6px;min-height:52px;font:700 13.5px/1 var(--sans);cursor:pointer}
 .pcash{background:var(--green);color:#fff}
 .pqr{background:var(--maroon);color:var(--cream)}
 .pcredit{background:var(--card);color:var(--maroon-d);border:1.5px solid var(--line)!important}
-.panel{flex:none;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.panel{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
 .keys{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
 .keys button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 0;font:700 19px/1 var(--mono);color:var(--ink);cursor:pointer}
 .quick{display:flex;gap:8px;margin-bottom:12px}
@@ -181,7 +182,7 @@ nav .railtotal{display:none}
   header.bar{padding:18px 26px;background:none;color:var(--ink)}
   .shop b{font-size:22px}
   .shop span{color:rgba(43,33,27,.5)}
-  .today{display:none}
+  .today{display:block}
   nav{flex-direction:column;justify-content:flex-start;gap:8px;background:linear-gradient(180deg,var(--maroon) 0%,var(--maroon-d) 100%);border-top:none;padding:20px 10px calc(env(safe-area-inset-bottom) + 18px);align-items:center}
   nav::before{content:"AD";width:46px;height:46px;border-radius:50%;background:var(--gold);color:var(--maroon-d);display:flex;align-items:center;justify-content:center;font:700 17px/1 var(--serif);border:2px solid var(--cream);flex:none;margin-bottom:14px}
   nav button{flex:none;width:100%;border-radius:12px;padding:11px 4px;background:rgba(255,255,255,.08);color:rgba(251,246,237,.75)}
@@ -197,9 +198,10 @@ nav .railtotal{display:none}
   .tile .thumb{height:80px}
   #paybar{left:auto;right:26px;bottom:26px;width:min(420px,60vw)}
   .sheet,#ticket{border-radius:22px;max-width:520px;width:100%;margin:0 auto 26px;padding-bottom:24px}
-  .modal,#ticketwrap{justify-content:center;align-items:center;padding:26px}
+  .modal,#ticketwrap{justify-content:center;align-items:center;padding:20px}
+  .sheet{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .sheet{animation:fadeIn .16s ease}
-  #ticket{animation:fadeIn .16s ease;max-height:88%}
+  #ticket{animation:fadeIn .16s ease;max-height:100%;border-radius:22px}
   .handle{display:none}
 }
 
@@ -207,7 +209,7 @@ nav .railtotal{display:none}
 @media (min-width:1080px){
   #app{grid-template-areas:"nav head ticket" "nav main ticket";grid-template-columns:96px minmax(0,1fr) 392px}
   #ticketwrap{position:static;grid-area:ticket;inset:auto;background:none;display:block;padding:0;animation:none;z-index:1}
-  #ticket{grid-area:ticket;height:100%;max-height:none;width:auto;max-width:none;margin:0;border-radius:0;border-left:1px solid var(--line);background:var(--card);padding:22px 20px 20px;animation:none}
+  #ticket{grid-area:ticket;height:100%;max-height:100%;width:auto;max-width:none;margin:0;border-radius:0;border-left:1px solid var(--line);background:var(--card);padding:22px 20px 20px;animation:none}
   #ticketwrap.hidden{display:block}
   #paybar{display:none!important}
   .line{flex-wrap:wrap;row-gap:8px}
@@ -617,7 +619,7 @@ function render(){
 
   var rows = entries(), wide = isWideStatic();
   document.getElementById('ticketwrap').innerHTML = (wide || S.ticketOpen)
-    ? '<div id="ticket" data-stop="1">'+ticketHTML()+'</div>' : '';
+    ? '<div id="ticket" class="'+(S.pay ? 'paying' : '')+'" data-stop="1">'+ticketHTML()+'</div>' : '';
   var layers = '';
   if(!wide && rows.length && !S.ticketOpen && S.tab==='sell'){
     layers += '<div id="paybar"><div class="c"><i>'+rows.length+(rows.length===1?' item':' items')+'</i><b>'+esc(fmt(total()))+'</b></div>'
@@ -728,6 +730,19 @@ window.addEventListener('resize', function(){
   var w = isWideStatic();
   if(w !== lastWide){ lastWide = w; if(w) S.ticketOpen = false; render(); }
 });
+
+function setAppHeight(){
+  var vv = window.visualViewport;
+  var px = Math.round((vv && vv.height) || window.innerHeight || 0);
+  if(px > 0) document.documentElement.style.setProperty('--appH', px + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', function(){ setTimeout(setAppHeight, 250); });
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', setAppHeight);
+  window.visualViewport.addEventListener('scroll', setAppHeight);
+}
 
 load();
 render();
