@@ -99,7 +99,7 @@ nav .railtotal{display:none}
 /* ticket: bottom sheet when narrow, column when wide */
 #ticketwrap:empty{display:none}
 #ticketwrap{position:absolute;inset:0;z-index:60;background:rgba(43,33,27,.42);display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn .15s ease}
-#ticket{background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 16px);max-height:86%;display:flex;flex-direction:column;overflow:hidden;animation:sheetUp .22s cubic-bezier(.32,.72,0,1)}
+#ticket{transition:transform .22s cubic-bezier(.32,.72,0,1);background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 16px);max-height:86%;display:flex;flex-direction:column;overflow:hidden;animation:sheetUp .22s cubic-bezier(.32,.72,0,1)}
 .handle{width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px;flex:none}
 #ticket h2{margin:0 0 2px;font:600 18px/1.25 var(--serif);flex:none}
 #ticket .sub{font:400 11.5px/1.4 var(--sans);color:rgba(43,33,27,.5);margin-bottom:12px;flex:none}
@@ -247,6 +247,7 @@ nav .railtotal{display:none}
   #app{height:auto!important;min-height:0!important;display:block!important;overflow:visible!important}
   header.bar,nav,main,#ticketwrap,#paybar,#toast,#layers .modal{display:none!important}
   .slipbtns,.slipbtns *{display:none!important}
+  #ticket{transform:none!important}
   #receiptwrap{position:static!important;inset:auto!important;display:block!important;padding:0!important;background:none!important;animation:none!important}
   .slip{width:72mm!important;max-width:none!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;color:#000!important;font-size:11.5px!important}
   .slip hr{border-top:1px dashed #000!important}
@@ -816,15 +817,30 @@ window.addEventListener('resize', function(){
   if(w !== lastWide){ lastWide = w; if(w) S.ticketOpen = false; render(); }
 });
 
+function liftCard(px){
+  var card = document.getElementById('ticket') || document.querySelector('.sheet');
+  if(card) card.style.transform = px ? 'translateY(-'+px+'px)' : '';
+}
+
 function keepFocusVisible(){
   var el = document.querySelector('.qbox input:focus, .rs input:focus');
-  if(!el) return;
-  var box = el.closest('.lines') || el.closest('.sheet') || el.closest('.pscroll');
-  if(!box || box.scrollHeight <= box.clientHeight) return;
-  var er = el.getBoundingClientRect(), br = box.getBoundingClientRect();
-  // centre the field in its own scroll box, not the whole page
-  var target = box.scrollTop + (er.top - br.top) - (br.height - er.height) / 2;
-  box.scrollTop = Math.max(0, Math.min(target, box.scrollHeight - box.clientHeight));
+  if(!el){ liftCard(0); return; }
+
+  // step 1: scroll the field's own list, when that list can scroll
+  var box = el.closest('.lines') || el.closest('.pscroll');
+  if(box && box.scrollHeight > box.clientHeight){
+    var er0 = el.getBoundingClientRect(), br = box.getBoundingClientRect();
+    var target = box.scrollTop + (er0.top - br.top) - (br.height - er0.height) / 2;
+    box.scrollTop = Math.max(0, Math.min(target, box.scrollHeight - box.clientHeight));
+  }
+
+  // step 2: iPadOS often reports no viewport change for the keyboard, so the card
+  // itself must move — lift it by however much still sits under the keyboard
+  var vv = window.visualViewport;
+  var visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+  var er = el.getBoundingClientRect();
+  var overlap = er.bottom + 24 - visibleBottom;
+  liftCard(overlap > 0 ? Math.min(overlap, 260) : 0);
 }
 
 function setAppHeight(){
@@ -835,8 +851,14 @@ function setAppHeight(){
 setAppHeight();
 document.addEventListener('focusin', function(ev){
   if(ev.target.matches && ev.target.matches('.qbox input, .rs input')){
-    setTimeout(keepFocusVisible, 60);
-    setTimeout(keepFocusVisible, 320);
+    [60, 320, 650].forEach(function(d){ setTimeout(keepFocusVisible, d); });
+  }
+});
+document.addEventListener('focusout', function(ev){
+  if(ev.target.matches && ev.target.matches('.qbox input, .rs input')){
+    setTimeout(function(){
+      if(!document.querySelector('.qbox input:focus, .rs input:focus')) liftCard(0);
+    }, 120);
   }
 });
 window.addEventListener('resize', setAppHeight);
