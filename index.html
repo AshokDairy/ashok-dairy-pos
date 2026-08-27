@@ -79,7 +79,7 @@ main{grid-area:main;min-height:0;display:flex;flex-direction:column;overflow:hid
 .item .nm{font:600 13.5px/1.3 var(--sans)}
 .item .sub{font:400 11px/1.4 var(--sans);color:rgba(43,33,27,.5)}
 .stepper{display:flex;align-items:center;gap:2px;flex:none;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:3px 4px}
-.stepper button{width:28px;height:28px;border:none;background:transparent;color:var(--maroon);font:700 17px/1 var(--sans);cursor:pointer}
+.stepper button{width:28px;height:28px;border:none;background:transparent;background-clip:padding-box;color:var(--maroon);font:700 17px/1 var(--sans);cursor:pointer}
 .stepper span{min-width:52px;text-align:center;font:700 13px/1 var(--mono);color:var(--maroon-d)}
 
 nav{grid-area:nav;background:rgba(251,246,237,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:9px 24px calc(env(safe-area-inset-bottom) + 12px);display:flex;justify-content:space-between;gap:6px}
@@ -110,7 +110,7 @@ nav .railtotal{display:none}
 .line .nm{font:600 13.5px/1.3 var(--sans)}
 .line .meta{font:400 11px/1.4 var(--sans);color:rgba(43,33,27,.5)}
 .qbox{display:flex;align-items:center;gap:1px;flex:none;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:2px 3px}
-.qbox button{width:26px;height:28px;border:none;background:transparent;color:var(--maroon);font:700 17px/1 var(--sans);cursor:pointer}
+.qbox button{width:26px;height:28px;border:none;background:transparent;background-clip:padding-box;color:var(--maroon);font:700 17px/1 var(--sans);cursor:pointer}
 .qbox input{width:50px;text-align:center;border:none;outline:none;background:transparent;font:700 13px/1 var(--mono);color:var(--ink);padding:6px 0}
 .qbox .u{font:700 10.5px/1 var(--mono);color:rgba(43,33,27,.45);padding-right:4px}
 .line .lt{width:62px;text-align:right;font:700 13px/1 var(--mono);color:var(--maroon-d)}
@@ -156,7 +156,7 @@ nav .railtotal{display:none}
 
 /* modals */
 .modal{position:absolute;inset:0;z-index:70;background:rgba(43,33,27,.45);display:flex;flex-direction:column;justify-content:flex-end;animation:fadeIn .15s ease}
-.sheet{background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 28px);animation:sheetUp .22s cubic-bezier(.32,.72,0,1)}
+.sheet{transition:transform .22s cubic-bezier(.32,.72,0,1);background:var(--cream);border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 28px);animation:sheetUp .22s cubic-bezier(.32,.72,0,1)}
 .sheet h3{margin:0;font:600 18px/1.25 var(--serif)}
 .sheet .sub{font:400 12px/1.4 var(--sans);color:rgba(43,33,27,.55);margin:2px 0 14px}
 .chips3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
@@ -247,7 +247,7 @@ nav .railtotal{display:none}
   #app{height:auto!important;min-height:0!important;display:block!important;overflow:visible!important}
   header.bar,nav,main,#ticketwrap,#paybar,#toast,#layers .modal{display:none!important}
   .slipbtns,.slipbtns *{display:none!important}
-  #ticket{transform:none!important}
+  #ticket,.sheet{transform:none!important}
   #receiptwrap{position:static!important;inset:auto!important;display:block!important;padding:0!important;background:none!important;animation:none!important}
   .slip{width:72mm!important;max-width:none!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;color:#000!important;font-size:11.5px!important}
   .slip hr{border-top:1px dashed #000!important}
@@ -817,14 +817,19 @@ window.addEventListener('resize', function(){
   if(w !== lastWide){ lastWide = w; if(w) S.ticketOpen = false; render(); }
 });
 
-function liftCard(px){
-  var card = document.getElementById('ticket') || document.querySelector('.sheet');
-  if(card) card.style.transform = px ? 'translateY(-'+px+'px)' : '';
+function liftCard(card, px){
+  if(!card) return;
+  card.style.transform = px ? 'translateY(-'+px+'px)' : '';
+}
+function clearLifts(){
+  var a = document.getElementById('ticket'), b = document.querySelector('.sheet');
+  if(a) a.style.transform = '';
+  if(b) b.style.transform = '';
 }
 
 function keepFocusVisible(){
   var el = document.querySelector('.qbox input:focus, .rs input:focus');
-  if(!el){ liftCard(0); return; }
+  if(!el){ clearLifts(); return; }
 
   // step 1: scroll the field's own list, when that list can scroll
   var box = el.closest('.lines') || el.closest('.pscroll');
@@ -835,12 +840,17 @@ function keepFocusVisible(){
   }
 
   // step 2: iPadOS often reports no viewport change for the keyboard, so the card
-  // itself must move — lift it by however much still sits under the keyboard
+  // holding the field must move — lift it by whatever still sits under the keyboard.
+  // The docked ticket column is a grid cell: moving it would tear the layout, so
+  // there we rely on the list scroll above.
+  var card = el.closest('#ticket, .sheet');
+  if(!card) return;
+  if(card.id === 'ticket' && isWideStatic()){ clearLifts(); return; }
   var vv = window.visualViewport;
   var visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
   var er = el.getBoundingClientRect();
   var overlap = er.bottom + 24 - visibleBottom;
-  liftCard(overlap > 0 ? Math.min(overlap, 260) : 0);
+  liftCard(card, overlap > 0 ? Math.min(overlap, 260) : 0);
 }
 
 function setAppHeight(){
@@ -857,7 +867,7 @@ document.addEventListener('focusin', function(ev){
 document.addEventListener('focusout', function(ev){
   if(ev.target.matches && ev.target.matches('.qbox input, .rs input')){
     setTimeout(function(){
-      if(!document.querySelector('.qbox input:focus, .rs input:focus')) liftCard(0);
+      if(!document.querySelector('.qbox input:focus, .rs input:focus')) clearLifts();
     }, 120);
   }
 });
