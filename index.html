@@ -18,7 +18,11 @@
   --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+button{-webkit-appearance:none;appearance:none;background-clip:padding-box;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button:focus{outline:none}
+button:focus:not(:focus-visible){outline:none;box-shadow:none}
+.qbox button,.stepper button,.keys button,.quick button,.pay3 button,.chips3 button,.chip,.tile,.del,.wide-btn,.ghost,.rowcard,.person,.view{-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;background:var(--cream);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%}
 button,input{font-family:inherit}
 ::-webkit-scrollbar{width:0;height:0}
@@ -708,6 +712,14 @@ function patchTotals(id){
   if(badge && p) badge.textContent = qtyText(p.unit, S.cart[id]||0);
 }
 
+document.addEventListener('pointerup', function(ev){
+  var b = ev.target.closest && ev.target.closest('button');
+  // a focused button keeps its active/hover shade on touch Safari after the tap ends
+  if(b && b.matches('.qbox button, .stepper button, .keys button, .quick button, .chip, .tile, .del')){
+    setTimeout(function(){ if(document.activeElement === b) b.blur(); }, 0);
+  }
+}, true);
+
 document.addEventListener('click', function(ev){
   var btn = ev.target.closest('[data-a]');
   if(!btn) return;
@@ -804,16 +816,33 @@ window.addEventListener('resize', function(){
   if(w !== lastWide){ lastWide = w; if(w) S.ticketOpen = false; render(); }
 });
 
+function keepFocusVisible(){
+  var el = document.querySelector('.qbox input:focus, .rs input:focus');
+  if(!el) return;
+  var box = el.closest('.lines') || el.closest('.sheet') || el.closest('.pscroll');
+  if(!box || box.scrollHeight <= box.clientHeight) return;
+  var er = el.getBoundingClientRect(), br = box.getBoundingClientRect();
+  // centre the field in its own scroll box, not the whole page
+  var target = box.scrollTop + (er.top - br.top) - (br.height - er.height) / 2;
+  box.scrollTop = Math.max(0, Math.min(target, box.scrollHeight - box.clientHeight));
+}
+
 function setAppHeight(){
   var vv = window.visualViewport;
   var px = Math.round((vv && vv.height) || window.innerHeight || 0);
   if(px > 0) document.documentElement.style.setProperty('--appH', px + 'px');
 }
 setAppHeight();
+document.addEventListener('focusin', function(ev){
+  if(ev.target.matches && ev.target.matches('.qbox input, .rs input')){
+    setTimeout(keepFocusVisible, 60);
+    setTimeout(keepFocusVisible, 320);
+  }
+});
 window.addEventListener('resize', setAppHeight);
 window.addEventListener('orientationchange', function(){ setTimeout(setAppHeight, 250); });
 if(window.visualViewport){
-  window.visualViewport.addEventListener('resize', setAppHeight);
+  window.visualViewport.addEventListener('resize', function(){ setAppHeight(); setTimeout(keepFocusVisible, 40); });
   window.visualViewport.addEventListener('scroll', setAppHeight);
 }
 
