@@ -23,7 +23,8 @@ button{-webkit-appearance:none;appearance:none;background-clip:padding-box;touch
 button:focus{outline:none}
 button:focus:not(:focus-visible){outline:none;box-shadow:none}
 .qbox button,.stepper button,.keys button,.quick button,.pay3 button,.chips3 button,.chip,.tile,.del,.wide-btn,.ghost,.rowcard,.person,.view{-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;background:var(--cream);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;background:var(--maroon-d);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;position:fixed;inset:0;width:100%}
+#app{background:var(--cream)}
 button,input{font-family:inherit}
 ::-webkit-scrollbar{width:0;height:0}
 a{color:var(--maroon)}a:hover{color:var(--maroon-d)}
@@ -854,6 +855,9 @@ function keepFocusVisible(){
 }
 
 function setAppHeight(){
+  // while a field is focused the shrunken viewport is the keyboard, not a smaller
+  // screen — shrinking the shell there would leave a blank band under the app
+  if(document.querySelector('.qbox input:focus, .rs input:focus')) return;
   var vv = window.visualViewport;
   var px = Math.round((vv && vv.height) || window.innerHeight || 0);
   if(px > 0) document.documentElement.style.setProperty('--appH', px + 'px');
