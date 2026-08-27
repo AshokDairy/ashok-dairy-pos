@@ -119,7 +119,9 @@ nav .railtotal{display:none}
 .pcash{background:var(--green);color:#fff}
 .pqr{background:var(--maroon);color:var(--cream)}
 .pcredit{background:var(--card);color:var(--maroon-d);border:1.5px solid var(--line)!important}
-.panel{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.panel{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow:hidden;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.pscroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pfoot{flex:0 0 auto;padding-top:10px}
 .keys{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
 .keys button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 0;font:700 19px/1 var(--mono);color:var(--ink);cursor:pointer}
 .quick{display:flex;gap:8px;margin-bottom:12px}
@@ -556,7 +558,7 @@ function ticketHTML(){
     var received = Number(S.cash||0);
     var rounded = Math.ceil(t/100)*100;
     var quick = [t, rounded, rounded+500].filter(function(v,i,a){ return v>0 && a.indexOf(v)===i; }).slice(0,3);
-    panel = '<div class="panel">'
+    panel = '<div class="panel"><div class="pscroll">'
       + '<div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:12px">'
       + '<span><i style="display:block;font:400 10px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgba(43,33,27,.5);font-style:normal">Due</i>'
       + '<b style="font:700 18px/1.2 var(--mono);color:var(--maroon-d)">'+esc(fmt(t))+'</b></span>'
@@ -566,24 +568,27 @@ function ticketHTML(){
       + (received > 0 && received < t ? '<div class="note bad"><span>Short by</span><b>'+esc(fmt(t-received))+'</b></div>' : '')
       + '<div class="quick">'+quick.map(function(v){ return '<button data-a="cashset" data-v="'+v+'">Rs '+v+'</button>'; }).join('')+'</div>'
       + '<div class="keys">'+['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(function(k){ return '<button data-a="key" data-v="'+esc(k)+'">'+esc(k)+'</button>'; }).join('')+'</div>'
+      + '</div><div class="pfoot">'
       + '<button class="wide-btn" data-a="takecash"'+(received >= t && t > 0 ? '' : ' disabled')+'>Take cash</button>'
-      + '<button class="ghost" data-a="backitems">Add more items</button></div>';
+      + '<button class="ghost" data-a="backitems">Add more items</button></div></div>';
   } else if(S.pay === 'qr'){
-    panel = '<div class="panel" style="text-align:center">'
+    panel = '<div class="panel" style="text-align:center"><div class="pscroll">'
       + '<div style="font:600 13px/1 var(--sans);color:var(--maroon)">Customer scans to pay</div>'
       + '<div style="font:700 24px/1.5 var(--mono);color:var(--maroon-d)">'+esc(fmt(t))+'</div>'
       + '<div class="qr"><span>wallet QR<br>image goes here</span></div>'
+      + '</div><div class="pfoot">'
       + '<button class="wide-btn" style="background:var(--maroon);color:var(--cream)" data-a="tookqr">Payment received</button>'
-      + '<button class="ghost" data-a="backitems">Add more items</button></div>';
+      + '<button class="ghost" data-a="backitems">Add more items</button></div></div>';
   } else if(S.pay === 'credit'){
-    panel = '<div class="panel">'
+    panel = '<div class="panel"><div class="pscroll">'
       + '<div style="font:600 13px/1 var(--sans);margin-bottom:4px">Whose account?</div>'
       + '<div style="font:400 12px/1.4 var(--sans);color:rgba(43,33,27,.55);margin-bottom:12px">'+esc(fmt(t))+' added to the customer\u2019s running account.</div>'
       + S.credit.map(function(k,i){
           return '<button class="person" data-a="credit" data-v="'+i+'"><span class="av">'+esc(k.name[0])+'</span>'
             + '<span class="nm">'+esc(k.name)+'</span><span class="due">'+esc(k.due ? fmtShort(k.due)+' due' : 'clear')+'</span></button>';
         }).join('')
-      + '<button class="ghost" data-a="backitems">Add more items</button></div>';
+      + '</div><div class="pfoot">'
+      + '<button class="ghost" data-a="backitems">Add more items</button></div></div>';
   }
 
   return '<div class="handle"></div>'
